@@ -10,7 +10,7 @@ const Email = ({email, isOpen, onToggle}) => {
         <CardHeader onClick={onToggle}>
           <Row>
             <Col className="px-2" md={2}>
-              {moment(email.date).format('YYYY-MM-DD HH:mm:ss')}
+              {moment(email.date).format('DD.MM.YYYY HH:mm:ss')}
             </Col>
             <Col className="px-2" md={4}>
               <div className="text-truncate" title={from.name}>
@@ -28,15 +28,15 @@ const Email = ({email, isOpen, onToggle}) => {
         <Collapse isOpen={isOpen}>
           <ListGroup className="list-group-flush">
             <ListGroupItem>
-              <strong>From:&nbsp;</strong>
+              <strong>Von:&nbsp;</strong>
               <span dangerouslySetInnerHTML={{__html: email.from.html}}/>
             </ListGroupItem>
             <ListGroupItem>
-              <strong>To:&nbsp;</strong>
+              <strong>An:&nbsp;</strong>
               <span dangerouslySetInnerHTML={{__html: email.to.html}}/>
             </ListGroupItem>
             <ListGroupItem>
-              <strong>Subject:&nbsp;</strong>
+              <strong>Betreff:&nbsp;</strong>
               {email.subject}
             </ListGroupItem>
           </ListGroup>
@@ -69,10 +69,7 @@ class App extends Component {
   };
 
   componentDidMount() {
-    let request = {
-      credentials: 'same-origin',
-    };
-    fetch(`${baseUrl}/api/emails`, request)
+    fetch(`${baseUrl}/api/emails`)
         .then(resp => resp.json())
         .then(emails => {
           this.setState({emails: emails});
@@ -87,16 +84,33 @@ class App extends Component {
     }
   };
 
+  deleteAll = () => {
+    fetch(`${baseUrl}/api/emails`, {
+      method: 'DELETE'
+    })
+        .then(() => {
+          this.setState({emails: []});
+        });
+  }
+
   render() {
     const isLoading = !this.state.emails;
     const isEmpty = !isLoading && this.state.emails.length === 0;
     const hasEmails = !isLoading && !isEmpty;
+
     return (
         <Container>
           <header>
-            <h1 className="my-4">
-              Emails
-            </h1>
+            <Row>
+              <Col className="d-flex flex-row py-4 justify-content-between">
+                <h1>E-Mails ({isLoading ? 'Lade...' : this.state.emails.length})</h1>
+
+                <button type="button" 
+                        className="btn btn-light"
+                        disabled={!hasEmails}
+                        onClick={this.deleteAll}>Alle Löschen</button>
+              </Col>
+            </Row>
           </header>
           {hasEmails && this.state.emails.map(email => (
               <Email email={email}
@@ -107,7 +121,7 @@ class App extends Component {
           }
           {isEmpty && (
               <div className="alert alert-info">
-                Empty mailbox
+                Keine E-Mails vorhanden
               </div>
           )}
         </Container>
