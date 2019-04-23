@@ -1,0 +1,14 @@
+[Unit]
+Description=Fake Smtp Service
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=root 
+ExecStart=/opt/rh/rh-nodejs10/root/usr/bin/node /var/fake-smtp/index.js -s 2525 --smtp-ip 0.0.0.0 --http-port 2580 --http-ip 0.0.0.0 --max 1000 --headers
+
+[Install]
+WantedBy=multi-user.target
+

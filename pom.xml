@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>fake-smtp-server</artifactId>
+  <groupId>fake-smtp</groupId>
+  <packaging>pom</packaging>
+  <version>1.0.0</version>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <executions>
+          <execution>
+            <id>yarn install</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>initialize</phase>
+            <configuration>
+              <executable>yarn</executable>
+              <arguments>
+                <argument>install</argument>
+              </arguments>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>yarn build</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <executable>yarn</executable>
+              <arguments>
+                <argument>build</argument>
+              </arguments>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>yarn deps</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <executable>yarn</executable>
+              <arguments>
+                <argument>install</argument>
+                <argument>--modules-folder</argument>
+                <argument>deps</argument>
+                <argument>--production=true</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>de.dentrassi.maven</groupId>
+        <artifactId>rpm</artifactId>
+        <executions>
+          <execution>
+            <id>rpm-build</id>
+            <goals>
+              <goal>rpm</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <attach>false</attach>
+          <group>Application/Misc</group>
+          <skipSigning>true</skipSigning>
+          <evalHostname>false</evalHostname>
+          <license>MIT</license>
+
+          <entries>
+            <entry>
+              <name>/var/fake-smtp/build</name>
+              <collect>
+                <from>${project.basedir}/build</from>
+              </collect>
+              <user>root</user>
+              <group>root</group>
+              <mode>0755</mode>
+            </entry>
+            <entry>
+              <name>/var/fake-smtp/node_modules</name>
+              <collect>
+                <from>${project.basedir}/deps</from>
+              </collect>
+              <user>root</user>
+              <group>root</group>
+              <mode>0755</mode>
+            </entry>
+
+            <entry>
+              <name>/var/fake-smtp/index.js</name>
+              <file>${project.basedir}/index.js</file>
+              <user>root</user>
+              <group>root</group>
+              <mode>0755</mode>
+            </entry>
+
+            <entry>
+              <name>/etc/systemd/system/fakesmtp.service</name>
+              <file>${project.basedir}/fakesmtp.service</file>
+              <user>root</user>
+              <group>root</group>
+              <mode>0600</mode>
+            </entry>
+          </entries>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
