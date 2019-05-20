@@ -45,7 +45,12 @@ const Email = ({email, isOpen, onToggle}) => {
           </div>
           <ListGroup className="list-group-flush" hidden={email.attachments.length === 0}>
             <ListGroupItem>
-              <b>Attachments: </b>{email.attachments.map(attachment => attachment.filename).join(', ')}
+              <b>Attachments: </b>
+              {email.attachments.map(attachment => (
+                  <a href={'data:' + attachment.contentType + ';base64,' +  new Buffer(attachment.content.data).toString('base64')}>{attachment.filename}</a>
+                ))
+              }
+
             </ListGroupItem>
           </ListGroup>
         </Collapse>
