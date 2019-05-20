@@ -35,6 +35,7 @@ if (config.auth) {
 cli.info("Configuration: \n" + JSON.stringify(config, null, 2));
 
 const mails = [];
+const mailsById = new Object();
 
 const server = new SMTPServer({
   authOptional: true,
@@ -50,15 +51,24 @@ const server = new SMTPServer({
     }
   },
   onData(stream, session, callback) {
+    //stream.pipe(process.stdout);
+    var bufs = [];
+    stream.on('data', function(d){ bufs.push(d); });
+    stream.on('end', callback);
+
     parseEmail(stream).then(
       mail => {
         cli.debug(JSON.stringify(mail, null, 2));
 
+        cli.info('received email with id: ' + mail.messageId)
         mails.unshift(mail);
+
+        mailsById[mail.messageId] = Buffer.concat(bufs);
 
         //trim list of emails if necessary
         while (mails.length > config.max) {
-          mails.pop();
+          let pop = mails.pop();
+          delete mailsById[mail.messageId]
         }
 
         callback();
@@ -143,6 +153,23 @@ function emailFilter(filter) {
 
 app.get('/api/emails', (req, res) => {
   res.json(mails.filter(emailFilter(req.query)));
+});
+
+app.get('/api/emails/:id', (req, res, next) => {
+  let messageId = req.params.id;
+
+  if (mailsById[messageId] === undefined){
+    cli.info('no mail with id: ' + messageId);
+    res.status(404).end();
+  } else {
+    cli.info('download of mail with id: ' + messageId);
+    res.set('Content-Type', 'message/rfc822');
+
+    let fileName = messageId.substring(0, messageId.indexOf("@"));
+    fileName = fileName.replace('<', '');
+    res.attachment(fileName + '.eml');
+    res.send(mailsById[messageId]);
+  }
 });
 
 app.delete('/api/emails', (req, res) => {

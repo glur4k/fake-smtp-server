@@ -18,9 +18,14 @@ const Email = ({email, isOpen, onToggle}) => {
               </div>
 
             </Col>
-            <Col className="px-2" md={6}>
+            <Col className="px-2" md={5}>
               <div className="text-truncate">
                 {email.subject}
+              </div>
+            </Col>
+            <Col className="px-2" md={1}>
+              <div className="text-truncate">
+                <a href={baseUrl + '/api/emails/' + email.messageId}>.eml</a>
               </div>
             </Col>
           </Row>
