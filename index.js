@@ -22,11 +22,13 @@ const config = cli.parse({
 const whitelist = config.whitelist ? config.whitelist.split(',') : [];
 
 let users = null;
-if (config.auth && !/.+:.+/.test(config.auth)) {
-    cli.error("Please provide authentication details in USERNAME:PASSWORD format");
-    console.log(process.exit(1))
+if (config.auth && !/.+:.+/.test(config.auth))
+{
+  cli.error("Please provide authentication details in USERNAME:PASSWORD format");
+  console.log(process.exit(1))
 }
-if (config.auth) {
+if (config.auth)
+{
   let authConfig = config.auth.split(":");
   users = {};
   users[authConfig[0]] = authConfig[1];
@@ -43,65 +45,82 @@ const server = new SMTPServer({
   maxAllowedUnauthenticatedCommands: 1000,
   hideSTARTTLS: true,
 
-  onMailFrom(address, session, cb) {
-    if (whitelist.length == 0 || whitelist.indexOf(address.address) !== -1) {
+  onMailFrom(address, session, cb)
+  {
+    if (whitelist.length == 0 || whitelist.indexOf(address.address) !== -1)
+    {
       cb();
-    } else {
+    } else
+    {
       cb(new Error('Invalid email from: ' + address.address));
     }
   },
-  onData(stream, session, callback) {
+  onData(stream, session, callback)
+  {
     //stream.pipe(process.stdout);
     var bufs = [];
-    stream.on('data', function(d){ bufs.push(d); });
+    stream.on('data', function (d)
+    {
+      bufs.push(d);
+    });
     stream.on('end', callback);
 
     parseEmail(stream).then(
-      mail => {
-        cli.debug(JSON.stringify(mail, null, 2));
+        mail =>
+        {
+          cli.debug(JSON.stringify(mail, null, 2));
 
-        cli.info('received email with id: ' + mail.messageId)
-        mails.unshift(mail);
+          cli.info('received email with id: ' + mail.messageId)
+          mails.unshift(mail);
 
-        mailsById[mail.messageId] = Buffer.concat(bufs);
+          mailsById[mail.messageId] = Buffer.concat(bufs);
 
-        //trim list of emails if necessary
-        while (mails.length > config.max) {
-          let pop = mails.pop();
-          delete mailsById[mail.messageId]
-        }
+          //trim list of emails if necessary
+          while (mails.length > config.max)
+          {
+            let pop = mails.pop();
+            delete mailsById[mail.messageId]
+          }
 
-        callback();
-      },
-      callback
+          callback();
+        },
+        callback
     );
   },
-  onAuth(auth, session, callback){
+  onAuth(auth, session, callback)
+  {
     cli.info("SMTP login for user: " + auth.username);
     callback(null, {user: auth.username});
   }
 });
 
-function formatHeaders(headers) {
+function formatHeaders(headers)
+{
   const result = {};
-  for (const [key, value] of headers) {
+  for (const [key, value] of headers)
+  {
     result[key] = value;
   }
   return result;
 }
 
-function parseEmail(stream) {
-  return simpleParser(stream).then(email => {
-    if (config.headers) {
+function parseEmail(stream)
+{
+  return simpleParser(stream).then(email =>
+  {
+    if (config.headers)
+    {
       email.headers = formatHeaders(email.headers);
-    } else {
+    } else
+    {
       delete email.headers;
     }
     return email;
   });
 }
 
-server.on('error', err => {
+server.on('error', err =>
+{
   cli.error(err);
 });
 
@@ -109,41 +128,50 @@ server.listen(config['smtp-port'], config['smtp-ip']);
 
 const app = express();
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next)
+{
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
 
-if (users) {
-    app.use(basicAuth({
-        users: users,
-        challenge: true
-    }));
+if (users)
+{
+  app.use(basicAuth({
+    users: users,
+    challenge: true
+  }));
 }
 
 const buildDir = path.join(__dirname, 'build');
 
 app.use(express.static(buildDir));
 
-function emailFilter(filter) {
-  return email => {
-    if (filter.since || filter.until) {
+function emailFilter(filter)
+{
+  return email =>
+  {
+    if (filter.since || filter.until)
+    {
       const date = moment(email.date);
-      if (filter.since && date.isBefore(filter.since)) {
+      if (filter.since && date.isBefore(filter.since))
+      {
         return false;
       }
-      if (filter.until && date.isAfter(filter.until)) {
+      if (filter.until && date.isAfter(filter.until))
+      {
         return false;
       }
     }
 
-    if (filter.to && _.every(email.to.value, to => to.address !== filter.to)) {
+    if (filter.to && _.every(email.to.value, to => to.address !== filter.to))
+    {
       return false;
     }
 
-    if (filter.from && _.every(email.from.value, from => from.address !== filter.from)) {
+    if (filter.from && _.every(email.from.value, from => from.address !== filter.from))
+    {
       return false;
     }
 
@@ -151,17 +179,21 @@ function emailFilter(filter) {
   }
 }
 
-app.get('/api/emails', (req, res) => {
+app.get('/api/emails', (req, res) =>
+{
   res.json(mails.filter(emailFilter(req.query)));
 });
 
-app.get('/api/emails/:id', (req, res, next) => {
+app.get('/api/emails/:id', (req, res, next) =>
+{
   let messageId = req.params.id;
 
-  if (mailsById[messageId] === undefined){
+  if (mailsById[messageId] === undefined)
+  {
     cli.info('no mail with id: ' + messageId);
     res.status(404).end();
-  } else {
+  } else
+  {
     cli.info('download of mail with id: ' + messageId);
     res.set('Content-Type', 'message/rfc822');
 
@@ -172,13 +204,44 @@ app.get('/api/emails/:id', (req, res, next) => {
   }
 });
 
-app.delete('/api/emails', (req, res) => {
-    mails.length = 0;
-    res.send();
+app.get('/api/attachment/:id/:index', (req, res, next) =>
+{
+  let messageId = req.params.id;
+  let index = req.params.index;
+
+  if (mailsById[messageId] === undefined)
+  {
+    cli.info('no mail with id: ' + messageId);
+    res.status(404).end();
+  } else
+  {
+    cli.info('download of mail attachment with id: ' + messageId);
+
+    let mailObj = mails.filter(mail => mail.messageId === messageId)[0];
+    let attachment = mailObj.attachments[index];
+
+    if (attachment === undefined)
+    {
+      cli.info('no attachment with index: ' + index);
+      res.status(404).end();
+      return;
+    }
+
+    res.set('Content-Type', attachment.contentType);
+    res.attachment(attachment.filename);
+    res.send(attachment.content);
+  }
 });
 
-app.listen(config['http-port'], config['http-ip'], () => {
-  cli.info("HTTP server listening on http://" + config['http-ip'] +  ":" + config['http-port']);
+app.delete('/api/emails', (req, res) =>
+{
+  mails.length = 0;
+  res.send();
+});
+
+app.listen(config['http-port'], config['http-ip'], () =>
+{
+  cli.info("HTTP server listening on http://" + config['http-ip'] + ":" + config['http-port']);
 });
 
 cli.info("SMTP server listening on " + config['smtp-ip'] + ":" + config['smtp-port']);
