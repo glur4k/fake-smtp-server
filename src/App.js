@@ -2,7 +2,8 @@ import React, {Component} from 'react';
 import {Card, CardHeader, Col, Collapse, Container, ListGroup, ListGroupItem, Row} from 'reactstrap';
 import moment from 'moment';
 
-const Email = ({email, isOpen, onToggle}) => {
+const Email = ({email, isOpen, onToggle}) =>
+{
   let from = email.from.value[0];
   let to = email.to.value[0];
   return (
@@ -40,6 +41,15 @@ const Email = ({email, isOpen, onToggle}) => {
               <strong>An:&nbsp;</strong>
               <span dangerouslySetInnerHTML={{__html: email.to.html}}/>
             </ListGroupItem>
+            {
+              email.cc !== undefined &&
+              (
+                  <ListGroupItem>
+                    <strong>CC:&nbsp;</strong>
+                    <span dangerouslySetInnerHTML={{__html: email.cc.html}}/>
+                  </ListGroupItem>
+              )
+            }
             <ListGroupItem>
               <strong>Betreff:&nbsp;</strong>
               {email.subject}
@@ -51,9 +61,9 @@ const Email = ({email, isOpen, onToggle}) => {
           <ListGroup className="list-group-flush" hidden={email.attachments.length === 0}>
             <ListGroupItem>
               <b>Attachments: </b>
-              {email.attachments.map(attachment => (
-                  <a href={'data:' + attachment.contentType + ';base64,' +  new Buffer(attachment.content.data).toString('base64')}>{attachment.filename}</a>
-                ))
+              {email.attachments.map((attachment, index) => (
+                  <a href={baseUrl + '/api/attachment/' + email.messageId + '/' + index}>{attachment.filename}</a>
+              ))
               }
 
             </ListGroupItem>
@@ -63,7 +73,8 @@ const Email = ({email, isOpen, onToggle}) => {
   )
 };
 
-function removeTrailingSlash(url) {
+function removeTrailingSlash(url)
+{
   return url.replace(/\/$/, "");
 }
 
@@ -71,39 +82,48 @@ const baseUrl = process.env.NODE_ENV === 'development'
     ? 'http://localhost:1080'
     : removeTrailingSlash(`${window.location.origin}${window.location.pathname}`);
 
-class App extends Component {
+class App extends Component
+{
 
   state = {
     emails: null,
     activeEmail: null
   };
 
-  componentDidMount() {
+  componentDidMount()
+  {
     fetch(`${baseUrl}/api/emails`)
-        .then(resp => resp.json())
-        .then(emails => {
-          this.setState({emails: emails});
-        });
+    .then(resp => resp.json())
+    .then(emails =>
+    {
+      this.setState({emails: emails});
+    });
   }
 
-  handleToggle = email => () => {
-    if (this.state.activeEmail === email.messageId) {
+  handleToggle = email => () =>
+  {
+    if (this.state.activeEmail === email.messageId)
+    {
       this.setState({activeEmail: null});
-    } else {
+    } else
+    {
       this.setState({activeEmail: email.messageId});
     }
   };
 
-  deleteAll = () => {
+  deleteAll = () =>
+  {
     fetch(`${baseUrl}/api/emails`, {
       method: 'DELETE'
     })
-        .then(() => {
-          this.setState({emails: []});
-        });
+    .then(() =>
+    {
+      this.setState({emails: []});
+    });
   }
 
-  render() {
+  render()
+  {
     const isLoading = !this.state.emails;
     const isEmpty = !isLoading && this.state.emails.length === 0;
     const hasEmails = !isLoading && !isEmpty;
@@ -115,10 +135,11 @@ class App extends Component {
               <Col className="d-flex flex-row py-4 justify-content-between">
                 <h1>E-Mails ({isLoading ? 'Lade...' : this.state.emails.length})</h1>
 
-                <button type="button" 
+                <button type="button"
                         className="btn btn-light"
                         disabled={!hasEmails}
-                        onClick={this.deleteAll}>Alle Löschen</button>
+                        onClick={this.deleteAll}>Alle Löschen
+                </button>
               </Col>
             </Row>
           </header>
