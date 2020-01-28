@@ -5,7 +5,6 @@ import moment from 'moment';
 const Email = ({email, isOpen, onToggle}) =>
 {
   let from = email.from.value[0];
-  let to = email.to.value[0];
   return (
       <Card>
         <CardHeader onClick={onToggle}>
@@ -61,8 +60,9 @@ const Email = ({email, isOpen, onToggle}) =>
           <ListGroup className="list-group-flush" hidden={email.attachments.length === 0}>
             <ListGroupItem>
               <b>Attachments: </b>
-              {email.attachments.map((attachment, index) => (
-                  <a href={baseUrl + '/api/attachment/' + email.messageId + '/' + index}>{attachment.filename}</a>
+              {
+                email.attachments.map((attachment, index) => (
+                  <a key={attachment.filename} href={baseUrl + '/api/attachment/' + email.messageId + '/' + index}>{attachment.filename}</a>
               ))
               }
 
