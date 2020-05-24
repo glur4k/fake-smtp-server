@@ -1,0 +1,255 @@
+$spacer: 1rem !default;
+$spacers: () !default;
+$spacers: map-merge(
+    (
+      0: 0,
+      1: ($spacer * .25),
+      2: ($spacer * .5),
+      3: $spacer,
+      4: ($spacer * 1.5),
+      5: ($spacer * 2),
+      6: ($spacer * 2.5),
+      7: ($spacer * 3)
+    ),
+    $spacers
+);
+
+@import '~bootstrap/scss/bootstrap.scss';
+@import '/fonts.scss';
+
+:root {
+  --text-color-highlight: #00FF00;
+  --text-color-primary: #007BFF;
+  --text-color-primary-hover: #0056B3;
+  --text-color-default: #F2F5F6;
+  --text-color-orange: #FF9900;
+  --background-color-default: #022032;
+  --background-color-light: #002D47;
+  --background-color-hover: #0B4464;
+  --background-color-active: #4C6C7E;
+  --footer-height: 3rem;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --text-color-highlight: #00AFB0;
+    --text-color-default: #070707;
+    --background-color-default: #DCE1E3;
+    --background-color-light: #F2F5F6;
+    --background-color-hover: #CFD4D6;
+    --background-color-active: #CECECE;
+  }
+}
+
+
+body {
+  background: var(--background-color-default);
+  color: var(--text-color-default);
+  font-family: $font-regular;
+
+  h1, h2, h3, h4 {
+    font-family: $font-black;
+    margin: 0;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    line-height: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+  }
+
+  h4 {
+    font-size: 0.875rem;
+  }
+
+  hr {
+    border-top-width: 0.125rem;
+    background-color: var(--background-color-active);
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  header {
+    height: 6rem;
+  }
+
+  .sidebar {
+    height: 100vh;
+
+    & > header {
+      position: relative;
+      z-index: 1;
+      background-color: var(--background-color-default);
+
+      .environment {
+        color: var(--text-color-orange);
+        font-size: 0.875rem;
+        font-family: $font-regular;
+      }
+
+      .btn svg {
+        width: 1.75rem;
+        height: 1.75rem;
+      }
+    }
+
+    .spinner-wrapper {
+      margin-top: -4.3125rem;
+      transition: margin .05s ease-in-out;
+
+      &.loading {
+        margin-top: 0;
+      }
+
+      .spinner {
+        width: 1.5rem;
+        height: 1.5rem;
+        color: var(--text-color-highlight);
+      }
+
+      .spinner-text {
+        font-family: $font-light;
+        font-size: 0.875rem;
+      }
+    }
+
+    ul {
+      max-height: calc(100vh - 9rem);
+      overflow: scroll;
+      outline: none;
+
+      li {
+        .teaser {
+          border: none;
+          line-height: 1.25rem;
+          color: inherit;
+          background-color: var(--background-color-light);
+
+          &:hover,
+          &:focus {
+            cursor: pointer;
+            outline: none;
+            text-decoration: none;
+            background-color: var(--background-color-hover);
+          }
+
+          &.active {
+            background-color: var(--background-color-active);
+          }
+
+          .marker {
+            width: 0.625rem;
+            height: 0.625rem;
+            margin: 0 0.6875rem;
+            border-radius: 50%;
+
+            &.new {
+              background-color: var(--text-color-highlight);
+            }
+          }
+
+          .content {
+            header {
+              height: auto;
+
+              .from {
+                font-size: 0.875rem;
+                font-family: $font-bold;
+              }
+
+              .date {
+                font-family: $font-regular;
+                font-size: 0.875rem;
+              }
+            }
+
+            .subject {
+              font-family: $font-black;
+              text-overflow: ellipsis;
+              width: 100%;
+              overflow: hidden;
+              white-space: nowrap;
+            }
+
+            .excerpt {
+              font-size: 0.875rem;
+              font-family: $font-light;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .container-fluid > div {
+    height: calc(100vh - var(--footer-height));
+  }
+
+  .content {
+    overflow-y: scroll;
+    max-height: 100vh;
+
+    .mail {
+      background-color: var(--background-color-light);
+
+      .infos {
+        .row > div:nth-child(1) {
+          font-size: 0.875rem;
+        }
+
+        .row > div:nth-child(2) {
+          font-family: $font-bold;
+        }
+
+        .timestamp {
+          font-size: 0.875rem;
+        }
+      }
+
+      .attachments {
+        li .btn {
+          border: 1px solid var(--background-color-active);
+          color: var(--text-color-default);
+
+          &:hover,
+          &:focus,
+          &:active {
+            border-color: var(--text-color-primary-hover);
+            color: var(--text-color-primary-hover);
+
+            svg {
+              color: var(--text-color-primary-hover);
+            }
+          }
+
+          svg {
+            color: var(--text-color-primary);
+            transition: all .15s ease-in-out;
+            height: 1.25rem;
+            width: 1.25rem;
+          }
+
+          .filename {
+            font-size: 0.875rem;
+          }
+
+          .filesize {
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
+  }
+
+  footer {
+    font-size: 0.875rem;
+    height: var(--footer-height);
+  }
+}

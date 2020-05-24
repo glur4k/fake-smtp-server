@@ -1,0 +1,42 @@
+// BOAT Fonts
+$font-dir: "fonts";
+
+@font-face {
+  font-family: "AtlasGroteskDetail-Light";
+  src: url("#{$font-dir}/AtlasGroteskDetail-Light.eot"); /* IE9 Compat Modes */
+  src: url("#{$font-dir}/AtlasGroteskDetail-Light.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+    url("#{$font-dir}/AtlasGroteskDetail-Light.woff2") format("woff2"), /* Super Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Light.woff") format("woff"), /* Pretty Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Light.ttf") format("truetype"); /* Safari, Android, iOS */
+}
+@font-face {
+  font-family: "AtlasGroteskDetail-Regular";
+  src: url("#{$font-dir}/AtlasGroteskDetail-Regular.eot"); /* IE9 Compat Modes */
+  src: url("#{$font-dir}/AtlasGroteskDetail-Regular.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+    url("#{$font-dir}/AtlasGroteskDetail-Regular.woff2") format("woff2"), /* Super Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Regular.woff") format("woff"), /* Pretty Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Regular.ttf") format("truetype"); /* Safari, Android, iOS */
+}
+
+@font-face {
+  font-family: "AtlasGroteskDetail-Black";
+  src: url("#{$font-dir}/AtlasGroteskDetail-Black.eot"); /* IE9 Compat Modes */
+  src: url("#{$font-dir}/AtlasGroteskDetail-Black.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+    url("#{$font-dir}/AtlasGroteskDetail-Black.woff2") format("woff2"), /* Super Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Black.woff") format("woff"), /* Pretty Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Black.ttf") format("truetype"); /* Safari, Android, iOS */
+}
+
+@font-face {
+  font-family: "AtlasGroteskDetail-Bold";
+  src: url("#{$font-dir}/AtlasGroteskDetail-Bold.eot"); /* IE9 Compat Modes */
+  src: url("#{$font-dir}/AtlasGroteskDetail-Bold.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+    url("#{$font-dir}/AtlasGroteskDetail-Bold.woff2") format("woff2"), /* Super Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Bold.woff") format("woff"), /* Pretty Modern Browsers */
+    url("#{$font-dir}/AtlasGroteskDetail-Bold.ttf") format("truetype"); /* Safari, Android, iOS */
+}
+
+$font-light: "AtlasGroteskDetail-Light", Helvetica, Arial, sans-serif;
+$font-regular: "AtlasGroteskDetail-Regular", Helvetica, Arial, sans-serif;
+$font-bold: "AtlasGroteskDetail-Bold", Helvetica, Arial, sans-serif;
+$font-black: "AtlasGroteskDetail-Black", Helvetica, Arial, sans-serif;
