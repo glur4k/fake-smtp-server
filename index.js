@@ -7,6 +7,7 @@ const path = require("path");
 const _ = require("lodash");
 const moment = require("moment");
 const cli = require('cli').enable('catchall').enable('status');
+const socketIo = require('socket.io');
 
 const config = cli.parse({
   'smtp-port': ['s', 'SMTP port to listen on', 'number', 1025],
@@ -37,7 +38,8 @@ if (config.auth)
 cli.info("Configuration: \n" + JSON.stringify(config, null, 2));
 
 const mails = [];
-const mailsById = new Object();
+const mailsById = {};
+const attachments = [];
 
 const server = new SMTPServer({
   authOptional: true,
@@ -47,7 +49,7 @@ const server = new SMTPServer({
 
   onMailFrom(address, session, cb)
   {
-    if (whitelist.length == 0 || whitelist.indexOf(address.address) !== -1)
+    if (whitelist.length === 0 || whitelist.indexOf(address.address) !== -1)
     {
       cb();
     } else
@@ -70,7 +72,11 @@ const server = new SMTPServer({
         {
           cli.debug(JSON.stringify(mail, null, 2));
 
-          cli.info('received email with id: ' + mail.messageId)
+          cli.info('received email with id: ' + mail.messageId);
+          attachments[mail.messageId] = _.cloneDeep(mail.attachments);
+          mail.attachments.map(file => file.content = null);
+
+          io.emit('newMail', mail);
           mails.unshift(mail);
 
           mailsById[mail.messageId] = Buffer.concat(bufs);
@@ -87,6 +93,7 @@ const server = new SMTPServer({
         callback
     );
   },
+
   onAuth(auth, session, callback)
   {
     cli.info("SMTP login for user: " + auth.username);
@@ -136,6 +143,35 @@ app.use(function (req, res, next)
   next();
 });
 
+var httpServer = require('http').createServer(app);
+
+const io = socketIo(httpServer);
+io.on('connection', socket =>
+{
+  cli.info(`New client connected: ${socket.id}`);
+
+  socket.emit('initialMails', mails);
+
+  socket.on('getMails', fn => fn(mails));
+
+  socket.on('deleteOne', messageID => {
+    _.remove(mails, mail => mail.messageId === messageID);
+    _.remove(attachments, file => file.key === messageID);
+
+    io.emit('initialMails', mails);
+  });
+
+  socket.on('deleteAll', fn => {
+    mails.length = 0;
+    attachments.length = 0;
+
+    fn(mails);
+  });
+
+  socket.on('disconnect', () => cli.info('Client disconnected'));
+});
+
+
 if (users)
 {
   app.use(basicAuth({
@@ -184,7 +220,7 @@ app.get('/api/emails', (req, res) =>
   res.json(mails.filter(emailFilter(req.query)));
 });
 
-app.get('/api/emails/:id', (req, res, next) =>
+app.get('/api/emails/:id', (req, res) =>
 {
   let messageId = req.params.id;
 
@@ -204,7 +240,7 @@ app.get('/api/emails/:id', (req, res, next) =>
   }
 });
 
-app.get('/api/attachment/:id/:index', (req, res, next) =>
+app.get('/api/attachment/:id/:index', (req, res) =>
 {
   let messageId = req.params.id;
   let index = req.params.index;
@@ -217,8 +253,7 @@ app.get('/api/attachment/:id/:index', (req, res, next) =>
   {
     cli.info('download of mail attachment with id: ' + messageId);
 
-    let mailObj = mails.filter(mail => mail.messageId === messageId)[0];
-    let attachment = mailObj.attachments[index];
+    let attachment = attachments[messageId][index];
 
     if (attachment === undefined)
     {
@@ -236,6 +271,7 @@ app.get('/api/attachment/:id/:index', (req, res, next) =>
 app.delete('/api/emails', (req, res) =>
 {
   mails.length = 0;
+  attachments.length = 0;
   res.send();
 });
 
@@ -243,5 +279,7 @@ app.listen(config['http-port'], config['http-ip'], () =>
 {
   cli.info("HTTP server listening on http://" + config['http-ip'] + ":" + config['http-port']);
 });
+
+httpServer.listen(4001, () => 'Listening to 4001');
 
 cli.info("SMTP server listening on " + config['smtp-ip'] + ":" + config['smtp-port']);

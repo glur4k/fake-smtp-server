@@ -2,16 +2,18 @@ import React from 'react';
 import moment from 'moment';
 import filesize from 'filesize';
 import LinesEllipsis from 'react-lines-ellipsis';
+import socketIOClient from 'socket.io-client';
 
 import {ReactComponent as TrashIcon} from './assets/icons/trash.svg';
 import {ReactComponent as UpdateIcon} from './assets/icons/arrow-down-circle-fill.svg';
 import {ReactComponent as DownloadIcon} from './assets/icons/file-arrow-down.svg';
 import {ReactComponent as FileDownloadIcon} from './assets/icons/file-earmark-arrow-down.svg';
 import {ReactComponent as FileIcon} from './assets/icons/paperclip.svg';
+import {ReactComponent as MarkAllAsReadIcon} from './assets/icons/check2-circle.svg';
 import {ReactComponent as Spinner} from './assets/icons/spinner.svg';
 import './assets/theme.scss';
 
-const Email = ({email}) => {
+const Email = ({email, deleteOne}) => {
   if (!email) {
     return null;
   }
@@ -19,8 +21,14 @@ const Email = ({email}) => {
   return (
     <div className="mb-3">
       <header className="d-flex align-items-end justify-content-end">
+        <button type="button"
+                className="btn btn-link btn-lg px-2"
+                onClick={deleteOne.bind(this, email.messageId)}
+                title="E-Mail löschen">
+          <TrashIcon/>
+        </button>
         <a role="button"
-           className="btn btn-link btn-lg"
+           className="btn btn-link btn-lg pl-2"
            title="E-Mail herunterladen"
            href={baseUrl + '/api/emails/' + email.messageId}>
           <DownloadIcon/>
@@ -35,10 +43,12 @@ const Email = ({email}) => {
               className="col-3 text-right timestamp">{getDateString(email.date)}, {moment(email.date).format('HH:mm:ss')} Uhr
             </div>
           </div>
-          <div className="row">
-            <div className="col-1">An:</div>
-            <div className="col-11">{email.to.text}</div>
-          </div>
+          {!!email.to && (
+            <div className="row">
+              <div className="col-1">An:</div>
+              <div className="col-11">{email.to.text}</div>
+            </div>
+          )}
           {!!email.cc && (
             <div className="row">
               <div className="col-1">CC:</div>
@@ -86,7 +96,7 @@ const Teaser = ({email, isNew, isActive, onClick}) => {
 
   return (
     <button type="button"
-            className={`teaser text-left rounded py-3 pr-3 d-flex ${isActive ? 'active' : ''}`}
+            className={`teaser w-100 text-left rounded py-3 pr-3 d-flex ${isActive ? 'active' : ''}`}
             onClick={onClick}>
       <div className={`marker mt-1 ${isNew ? 'new' : ''}`} role="presentation">
         <span className="sr-only">Diese E-Mail ist neu</span>
@@ -140,8 +150,10 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
+    this.socket = socketIOClient('http://localhost:4001');
+
     this.state = {
-      emails: null,
+      emails: [],
       activeEmail: null,
       activeEmailId: null,
       loading: false,
@@ -151,31 +163,48 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    this.loadMails();
+    this.setState({loading: true});
+
+    this.socket.on('initialMails', emails => this.initialMails(emails));
+
+    this.socket.on('newMail', email => this.newMail(email));
+
+    this.socket.on('deleteOne', messageId => console.log('Should delete E-Mail with ID', messageId));
+  }
+
+  initialMails(emails) {
+    let activeEmailStillExists = emails.some(email => email.messageId === this.state.activeEmailId);
+
+    let openedEmails = this.state.openedEmails.filter(openedEmail => emails.some(email => {
+      return email.messageId === openedEmail;
+    }));
+
+    this.setState({
+      emails: emails,
+      loading: false,
+      activeEmail: (activeEmailStillExists ? this.state.activeEmail : null),
+      activeEmailId: (activeEmailStillExists ? this.state.activeEmailId : 0),
+      openedEmails: openedEmails,
+      newEmails: emails.length - openedEmails.length
+    });
+
+    this.updateDocumentTitle(this.state.newEmails);
   }
 
   loadMails = () => {
     this.setState({loading: true});
 
-    fetch(`${baseUrl}/api/emails`)
-      .then(resp => resp.json())
-      .then(emails => {
-        let activeEmailStillExists = emails.some(email => email.messageId === this.state.activeEmailId);
-
-        let openedEmails = this.state.openedEmails.filter(openedEmail => emails.some(email => {
-          return email.messageId === openedEmail;
-        }));
-
-        this.setState({
-          emails: emails,
-          loading: false,
-          activeEmail: (activeEmailStillExists ? this.state.activeEmail : null),
-          activeEmailId: (activeEmailStillExists ? this.state.activeEmailId : 0),
-          openedEmails: openedEmails,
-          newEmails: emails.length - openedEmails.length
-        });
-      });
+    this.socket.emit('getMails', emails => this.initialMails(emails));
   };
+
+  newMail(email) {
+    this.setState({
+      emails: [email, ...this.state.emails],
+      newEmails: this.state.newEmails + 1
+    });
+
+    this.updateDocumentTitle(this.state.newEmails);
+  }
 
   openMail(email) {
     let openedEmails = this.state.openedEmails;
@@ -192,31 +221,54 @@ class App extends React.Component {
       newEmails: newEmails
     });
 
+    this.updateDocumentTitle(newEmails);
     localStorage.setItem('openedEmails', JSON.stringify(openedEmails));
   };
 
-  deleteAll = () => {
-    fetch(`${baseUrl}/api/emails`, {
-      method: 'DELETE'
-    })
-      .then(() => {
-        this.setState({
-          emails: [],
-          activeEmail: null,
-          activeEmailId: null,
-          openedEmails: [],
-          newEmails: 0
-        });
-
-        localStorage.setItem('openedEmails', JSON.stringify(this.state.openedEmails));
-      });
+  deleteOne = messageId => {
+    this.socket.emit('deleteOne', messageId);
   };
 
-  render() {
-    const isLoading = !this.state.emails;
-    const isEmpty = !isLoading && this.state.emails.length === 0;
-    const hasEmails = !isLoading && !isEmpty;
+  deleteAll = () => {
+    this.socket.emit('deleteAll', res => {
+      this.setState({
+        emails: res,
+        activeEmail: null,
+        activeEmailId: null,
+        openedEmails: res,
+        newEmails: 0
+      });
 
+      this.updateDocumentTitle(res);
+      localStorage.setItem('openedEmails', JSON.stringify(res));
+    })
+  };
+
+  markAllAsRead = () => {
+    let openedEmails = this.state.emails.map(email => email.messageId);
+
+    this.setState({
+      openedEmails: openedEmails,
+      newEmails: 0
+    });
+
+    this.updateDocumentTitle(0);
+    localStorage.setItem('openedEmails', JSON.stringify(openedEmails));
+  };
+
+  updateDocumentTitle(count) {
+    let suffix = '';
+
+    if (count > 99) {
+      suffix = ' (99+)'
+    } else if (count > 0) {
+      suffix = ` (${count})`;
+    }
+
+    document.title = 'Webmail' + suffix;
+  }
+
+  render() {
     return (
       <div className="container-fluid">
         <div className="row">
@@ -243,7 +295,7 @@ class App extends React.Component {
                 </div>
               </li>
 
-              {hasEmails && this.state.emails.map(email => (
+              {this.state.emails.length > 0 && this.state.emails.map(email => (
                 <li key={email.messageId}
                     onClick={this.openMail.bind(this, email)}
                     className="mb-2">
@@ -256,16 +308,24 @@ class App extends React.Component {
           </section>
 
           <section className="col-md-7 col-lg-8 col-xl-9 content">
-            <Email email={this.state.activeEmail}/>
+            <Email email={this.state.activeEmail}
+                   deleteOne={this.deleteOne}/>
           </section>
         </div>
         <footer className="row">
-          <div className="col-3 d-flex justify-content-center align-items-center">
-            <span className="ml-auto">{this.state.emails ? this.state.emails.length : '0'} E-Mails gesamt</span>
-            <button disabled={!hasEmails}
+          <div className="col-3 d-flex justify-content-between align-items-center">
+            <button disabled={this.state.emails.length === 0}
+                    onClick={this.markAllAsRead}
+                    type="button"
+                    className="btn btn-link"
+                    title="Alle E-Mails als gelesen markieren">
+              <MarkAllAsReadIcon/>
+            </button>
+            <span>{this.state.emails ? this.state.emails.length : '0'} E-Mails gesamt</span>
+            <button disabled={this.state.emails.length === 0}
                     onClick={this.deleteAll}
                     type="button"
-                    className="btn btn-link ml-auto"
+                    className="btn btn-link"
                     title="Alle E-Mails löschen">
               <TrashIcon/>
             </button>
