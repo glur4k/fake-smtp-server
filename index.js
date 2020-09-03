@@ -146,7 +146,6 @@ app.use(function (req, res, next)
 var httpServer = require('http').createServer(app);
 
 const io = socketIo(httpServer);
-io.set('origins', '*:*');
 
 io.on('connection', socket =>
 {
