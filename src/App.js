@@ -150,7 +150,11 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.socket = socketIOClient('http://localhost:4001');
+    const socketUrl = process.env.NODE_ENV === 'development'
+      ? 'http://localhost'
+      : removeTrailingSlash(window.location.origin);
+
+    this.socket = socketIOClient(`${socketUrl}:4001`);
 
     this.state = {
       emails: [],
