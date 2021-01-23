@@ -41,9 +41,7 @@
     "moment": "^2.27.0",
     "node-sass": "^4.14.1",
     "react-lines-ellipsis": "^0.14.1",
-    "smtp-server": "^3.7.0",
-    "socket.io": "^2.3.0",
-    "socket.io-client": "^2.3.0"
+    "smtp-server": "^3.7.0"
   },
   "devDependencies": {
     "react": "^16.13.1",

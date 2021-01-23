@@ -2,7 +2,6 @@ import React from 'react';
 import moment from 'moment';
 import filesize from 'filesize';
 import LinesEllipsis from 'react-lines-ellipsis';
-import socketIOClient from 'socket.io-client';
 
 import {ReactComponent as TrashIcon} from './assets/icons/trash.svg';
 import {ReactComponent as UpdateIcon} from './assets/icons/arrow-down-circle-fill.svg';
@@ -150,12 +149,6 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
-    const socketUrl = process.env.NODE_ENV === 'development'
-      ? 'http://localhost'
-      : removeTrailingSlash(window.location.origin);
-
-    this.socket = socketIOClient(`${socketUrl}:4001`);
-
     this.state = {
       emails: [],
       activeEmail: null,
@@ -169,36 +162,32 @@ class App extends React.Component {
   componentDidMount() {
     this.setState({loading: true});
 
-    this.socket.on('initialMails', emails => this.initialMails(emails));
-
-    this.socket.on('newMail', email => this.newMail(email));
-
-    this.socket.on('deleteOne', messageId => console.log('Should delete E-Mail with ID', messageId));
-  }
-
-  initialMails(emails) {
-    let activeEmailStillExists = emails.some(email => email.messageId === this.state.activeEmailId);
-
-    let openedEmails = this.state.openedEmails.filter(openedEmail => emails.some(email => {
-      return email.messageId === openedEmail;
-    }));
-
-    this.setState({
-      emails: emails,
-      loading: false,
-      activeEmail: (activeEmailStillExists ? this.state.activeEmail : null),
-      activeEmailId: (activeEmailStillExists ? this.state.activeEmailId : 0),
-      openedEmails: openedEmails,
-      newEmails: emails.length - openedEmails.length
-    });
-
-    this.updateDocumentTitle(this.state.newEmails);
+    this.loadMails()
   }
 
   loadMails = () => {
     this.setState({loading: true});
 
-    this.socket.emit('getMails', emails => this.initialMails(emails));
+    fetch(`${baseUrl}/api/emails`)
+      .then(resp => resp.json())
+      .then(emails => {
+        let activeEmailStillExists = emails.some(email => email.messageId === this.state.activeEmailId);
+
+        let openedEmails = this.state.openedEmails.filter(openedEmail => emails.some(email => {
+          return email.messageId === openedEmail;
+        }));
+
+        this.setState({
+          emails: emails,
+          loading: false,
+          activeEmail: (activeEmailStillExists ? this.state.activeEmail : null),
+          activeEmailId: (activeEmailStillExists ? this.state.activeEmailId : 0),
+          openedEmails: openedEmails,
+          newEmails: emails.length - openedEmails.length
+        });
+
+        this.updateDocumentTitle(this.state.newEmails);
+      });
   };
 
   newMail(email) {
@@ -230,10 +219,11 @@ class App extends React.Component {
   };
 
   deleteOne = messageId => {
-    this.socket.emit('deleteOne', messageId);
+    // DELETE
   };
 
   deleteAll = () => {
+    /*
     this.socket.emit('deleteAll', res => {
       this.setState({
         emails: res,
@@ -246,6 +236,7 @@ class App extends React.Component {
       this.updateDocumentTitle(res);
       localStorage.setItem('openedEmails', JSON.stringify(res));
     })
+    */
   };
 
   markAllAsRead = () => {
