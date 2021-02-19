@@ -38,7 +38,7 @@ cli.info("Configuration: \n" + JSON.stringify(config, null, 2));
 
 const mails = [];
 const mailsById = {};
-const attachments = [];
+const attachments = {};
 
 const server = new SMTPServer({
   authOptional: true,
@@ -158,12 +158,11 @@ function emailFilter(filter)
   {
     if (filter.since || filter.until)
     {
-      const date = moment(email.date);
-      if (filter.since && date.isBefore(filter.since))
+      if (filter.since && email.date.getTime() < filter.since)
       {
         return false;
       }
-      if (filter.until && date.isAfter(filter.until))
+      if (filter.until && email.date.getTime() > filter.until)
       {
         return false;
       }
@@ -239,9 +238,26 @@ app.get('/api/attachment/:id/:index', (req, res, next) =>
 app.delete('/api/emails', (req, res) =>
 {
   mails.length = 0;
-  attachments.length = 0;
+  mailsById.length = {};
+  attachments.length = {};
   res.send();
 });
+
+app.delete('/api/emails/:id', (req, res) =>
+{
+  let id = req.params.id;
+
+  if (!mails.some(mail => mail.messageId === id)) {
+    cli.info('no mail with id: ' + messageId);
+    res.status(404).end();
+  } else {
+    _.remove(mails, mail => mail.messageId === id)
+    _.unset(mailsById, id);
+    _.unset(attachments, id);
+    res.send();
+  }
+});
+
 
 app.listen(config['http-port'], config['http-ip'], () =>
 {
