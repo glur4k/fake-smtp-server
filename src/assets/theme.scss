@@ -136,7 +136,7 @@ body {
 
       ul {
         height: calc(100vh - 9rem);
-        overflow: scroll;
+        overflow-y: scroll;
         outline: none;
 
         li {
