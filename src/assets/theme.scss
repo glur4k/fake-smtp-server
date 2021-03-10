@@ -112,6 +112,7 @@ body {
 
     aside {
       max-width: 400px;
+      min-width: 400px;
       position: fixed;
 
       .spinner-wrapper {
@@ -217,6 +218,11 @@ body {
       max-height: calc(100vh - 6rem);
       margin-left: 400px;
       position: relative;
+
+      .empty-wrapper {
+        min-height: calc(100vh - 6rem);
+        opacity: 0.5;
+      }
 
       .mail-header {
         height: 6rem;

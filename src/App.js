@@ -9,6 +9,7 @@ import {ReactComponent as DownloadIcon} from './assets/icons/cloud-download.svg'
 import {ReactComponent as FileDownloadIcon} from './assets/icons/file-earmark-richtext.svg';
 import {ReactComponent as FileIcon} from './assets/icons/paperclip.svg';
 import {ReactComponent as MarkAllAsReadIcon} from './assets/icons/check2-circle.svg';
+import {ReactComponent as MailIcon} from './assets/icons/envelope-fill.svg';
 import {ReactComponent as Spinner} from './assets/icons/spinner.svg';
 import './assets/theme.scss';
 
@@ -359,6 +360,13 @@ class App extends React.Component {
         </aside>
 
         <main className="px-4">
+          {!this.state.activeEmail &&
+            <div className="empty-wrapper d-flex flex-column align-items-center justify-content-center">
+              <MailIcon className="d-block mb-3"/>
+              <span>Keine E-Mail ausgewählt</span>
+            </div>
+          }
+
           <Email email={this.state.activeEmail}
                  deleteOne={this.deleteOne}/>
         </main>
