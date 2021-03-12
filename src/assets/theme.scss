@@ -37,7 +37,7 @@ $spacers: map-merge(
     --text-color-highlight: #007BFF;
     --text-color-default: #070707;
     --background-color-default: #DCE1E3;
-    --background-color-light: #F2F5F6;
+    --background-color-light: #F5F8F8;
     --background-color-hover: #CFD4D6;
     --background-color-active: #CECECE;
   }
@@ -160,8 +160,8 @@ body {
             }
 
             .marker {
-              width: 0.625rem;
-              height: 0.625rem;
+              width: 0.5rem;
+              height: 0.5rem;
               border-radius: 50%;
 
               &.new {
@@ -170,12 +170,15 @@ body {
             }
 
             .content {
-              header {
-                height: auto;
+              max-width: calc(100% - 1rem);
 
+              .header {
                 .from {
                   font-size: 0.875rem;
                   font-family: $font-bold;
+                  max-width: calc(100% - 3.75rem);
+                  overflow: hidden;
+                  text-overflow: ellipsis;
                 }
 
                 .date {

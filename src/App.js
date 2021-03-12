@@ -1,7 +1,7 @@
 import React from 'react';
 import moment from 'moment';
 import filesize from 'filesize';
-import LinesEllipsis from 'react-lines-ellipsis';
+import Truncate from 'react-truncate';
 
 import {ReactComponent as TrashIcon} from './assets/icons/trash.svg';
 import {ReactComponent as UpdateIcon} from './assets/icons/arrow-down-circle-fill.svg';
@@ -82,13 +82,13 @@ const Teaser = ({email, isNew, isActive, onClick}) => {
 
   return (
     <button type="button"
-            className={`teaser text-left rounded p-3 d-flex ${isActive ? 'active' : ''}`}
+            className={`teaser text-left w-100 rounded p-3 d-flex ${isActive ? 'active' : ''}`}
             onClick={onClick}>
       <div className={`marker mt-1 mr-2 ${isNew ? 'new' : ''}`} role="presentation" title="Diese E-Mail ist neu">
         <span className="sr-only">Diese E-Mail ist neu</span>
       </div>
       <div className="content w-100">
-        <div className="d-flex">
+        <div className="header d-flex">
           <div className="from mb-2">{from.address}</div>
           <span className="date ml-auto"
                 title={`Datum: ${moment(email.date).format('DD.MM.YYYY HH:mm:ss')} Uhr`}>
@@ -103,7 +103,9 @@ const Teaser = ({email, isNew, isActive, onClick}) => {
           }
         </div>
         <div className="excerpt">
-          <LinesEllipsis text={email.text} maxLine='2'/>
+          <Truncate lines={2} width={327}>
+            {email.text}
+          </Truncate>
         </div>
       </div>
     </button>
