@@ -97,13 +97,12 @@ const Teaser = ({email, isNew, isActive, onClick}) => {
         </div>
         <div className="d-flex">
           <span className="subject mr-2">{email.subject}</span>
-          <span className="sr-only">Diese E-Mail hat einen oder mehrere Anhänge.</span>
           {email.attachments.length > 0 &&
-          <FileIcon className="ml-auto"/>
+          <FileIcon className="ml-auto" title="Diese E-Mail hat einen oder mehrere Anhänge."/>
           }
         </div>
         <div className="excerpt">
-          <Truncate lines={2} width={327}>
+          <Truncate lines={2} width={336}>
             {email.text}
           </Truncate>
         </div>

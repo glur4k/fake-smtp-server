@@ -41,6 +41,7 @@
     "moment": "^2.27.0",
     "node-sass": "^4.14.1",
     "react-truncate": "^2.4.0",
+    "sanitize-html": "^2.3.2",
     "smtp-server": "^3.7.0"
   },
   "devDependencies": {

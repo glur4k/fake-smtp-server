@@ -7,6 +7,7 @@ const path = require("path");
 const _ = require("lodash");
 const moment = require("moment");
 const cli = require('cli').enable('catchall').enable('status');
+const sanitizeHtml = require('sanitize-html');
 
 const config = cli.parse({
   'smtp-port': ['s', 'SMTP port to listen on', 'number', 1025],
@@ -74,6 +75,13 @@ const server = new SMTPServer({
         cli.info('received email with id: ' + mail.messageId);
         attachments[mail.messageId] = _.cloneDeep(mail.attachments);
         mail.attachments.map(file => file.content = null);
+
+        if (!mail.hasOwnProperty('text') || mail.text.length === 0) {
+          mail.text = sanitizeHtml(mail.html, {
+            allowedTags: [],
+            allowedAttributes: {}
+          }).replace(/\\n/g, '').substring(0, 150);
+        }
 
         mails.unshift(mail);
 
